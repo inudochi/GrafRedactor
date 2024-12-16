@@ -9,29 +9,30 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Slider;
-import javafx.scene.image.PixelReader;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.image.Image;
-import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.transform.Transform;
 import javafx.stage.FileChooser;
 import javafx.scene.paint.Color;
 import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class Controller {
     public ColorPicker cp;
     public Slider sl;
     @FXML
+    private ToggleButton lineToggle;
+    @FXML
     Canvas canvas;
     Model model;
     Points points;
-    
+
+    //Добавим переменные для хранения начальной и конечной точек линии:
+    private boolean isDrawingLine = false;
+    private double startX, startY;
 
     Image bgImage;
     double bgX, bgY, bgW = 300.0, bgH = 300.0;
@@ -39,6 +40,8 @@ public class Controller {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         model = new Model();
         SliderTol();
+        //Инициализируем lineToggle
+        lineToggle.setSelected(false);
     }
     public void SliderTol() {//толщина линии
         sl.setMin(3);
@@ -103,28 +106,37 @@ public class Controller {
             gc.fillOval(model.getPoint(i).getX(),model.getPoint(i).getY(),model.getPoint(i).getwP() ,model.getPoint(i).gethP());
         }
     }
-
-    public void print(MouseEvent mouseEvent) {//для неприрывной линии
-        //update();
-
+    //Изменим метод print для рисования линии:
+    public void print(MouseEvent mouseEvent) {
         GraphicsContext gc = canvas.getGraphicsContext2D();
-        Points points = new Points((int) mouseEvent.getX(), (int) mouseEvent.getY());
-        if (flag == NewLine.getId()) {
-            points.setSizePoint(sl.getValue(), sl.getValue());
-
-            model.addPoint(points);
+        if (isDrawingLine) {
+            if (mouseEvent.getEventType() == MouseEvent.MOUSE_PRESSED) {
+                // Сохраняем начальные координаты
+                startX = mouseEvent.getX();
+                startY = mouseEvent.getY();
+            } else if (mouseEvent.getEventType() == MouseEvent.MOUSE_DRAGGED) {
+                // Очистить холст и перерисовать все точки
+                gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+                update(model); // Перерисовать точки
+                // Цвет и толщина линии
+                gc.setStroke(cp.getValue());
+                gc.setLineWidth(sl.getValue());
+                // Рисовать линию от начальной точки до текущей позиции мыши
+                gc.strokeLine(startX, startY, mouseEvent.getX(), mouseEvent.getY());
+            } else if (mouseEvent.getEventType() == MouseEvent.MOUSE_RELEASED) {
+                // Завершить рисование линии
+                gc.setStroke(cp.getValue());
+                gc.setLineWidth(sl.getValue());
+                gc.strokeLine(startX, startY, mouseEvent.getX(), mouseEvent.getY());
+            }
         } else {
-            model.removePoint(points);
+            // Логика для рисования точек
+            Points points = new Points((int) mouseEvent.getX(), (int) mouseEvent.getY());
+            points.setSizePoint(sl.getValue(), sl.getValue());
+            model.addPoint(points);
+            update(model);
         }
-        update(model);
     }
-
-
-
-
-
-
-
 
 
     public void save(ActionEvent actionEvent) throws IOException {
@@ -180,8 +192,11 @@ public class Controller {
 
     public void click2(MouseEvent mouseEvent) {
 
-
-
+    }
+    //Добавим метод для переключения рисоавании линии:
+    @FXML
+    public void toggleLine(ActionEvent event) {
+        isDrawingLine = lineToggle.isSelected();
     }
 }
 
