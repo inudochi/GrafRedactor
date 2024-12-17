@@ -1,34 +1,86 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.canvas.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.VBox?>
 
-<GridPane alignment="center" hgap="10" prefHeight="391.0" prefWidth="474.0" vgap="10" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
-   <columnConstraints>
-      <ColumnConstraints />
-   </columnConstraints>
-   <rowConstraints>
-      <RowConstraints />
-   </rowConstraints>
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
    <children>
-      <Pane prefHeight="395.0" prefWidth="481.0">
+      <FlowPane alignment="CENTER" prefHeight="317.0" prefWidth="433.0" style="-fx-border-color: blue;">
          <children>
-            <FlowPane layoutY="321.0" prefHeight="35.0" prefWidth="433.0">
-               <children>
-                  <Button fx:id="NewLine" mnemonicParsing="false" onAction="#kar" text="Карандаш" />
-                  <Button mnemonicParsing="false" onAction="#lastik" text="Ластик" />
-                  <Button mnemonicParsing="false" onAction="#save" text="Сохранить" />
-                  <Button mnemonicParsing="false" onAction="#open" text="Загрузить" />
-                  <ToggleButton fx:id="lineToggle" text="Линия" onAction="#toggleLine" />
-                  <Slider fx:id="sl" onDragDetected="#click2" />
-               </children>
-            </FlowPane>
-            <FlowPane prefHeight="317.0" prefWidth="433.0">
-               <children>
-                  <Canvas fx:id="canvas" height="285.0" onMouseClicked="#clik_canvas" onMousePressed="#print" onMouseDragged="#print" onMouseReleased="#print"  width="386.0" />
-               </children></FlowPane>
-            <ColorPicker fx:id="cp" layoutX="29.0" layoutY="356.0" onAction="#act" />
-         </children></Pane>
+            <Canvas fx:id="canvas" height="317.0" width="592.0" />
+         </children>
+         <VBox.margin>
+            <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+         </VBox.margin>
+      </FlowPane>
+      <FlowPane alignment="CENTER" prefHeight="87.0" prefWidth="600.0">
+         <children>
+            <Button fx:id="NewLine" mnemonicParsing="false" onAction="#setDrawPencil" text="Карандаш">
+               <FlowPane.margin>
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+               </FlowPane.margin>
+            </Button>
+            <Button mnemonicParsing="false" onAction="#setPentagon" text="Пятиугольник">
+               <FlowPane.margin>
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+               </FlowPane.margin>
+            </Button>
+            <Button mnemonicParsing="false" onAction="#setEraser" text="Ластик">
+               <FlowPane.margin>
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+               </FlowPane.margin>
+            </Button>
+            <Button mnemonicParsing="false" onAction="#save" text="Сохранить">
+               <FlowPane.margin>
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+               </FlowPane.margin>
+            </Button>
+            <Button mnemonicParsing="false" onAction="#open" text="Загрузить">
+               <FlowPane.margin>
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+               </FlowPane.margin>
+            </Button>
+         </children>
+         <VBox.margin>
+            <Insets />
+         </VBox.margin>
+      </FlowPane>
+      <FlowPane alignment="CENTER" prefHeight="48.0" prefWidth="600.0">
+         <children>
+            <Label text="Контур" />
+            <ColorPicker fx:id="colorPickerStroke">
+               <FlowPane.margin>
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+               </FlowPane.margin>
+            </ColorPicker>
+            <CheckBox fx:id="fillCheckBox" mnemonicParsing="false" text="Заливка">
+               <FlowPane.margin>
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+               </FlowPane.margin>
+            </CheckBox>
+            <ColorPicker fx:id="colorPickerFill">
+               <FlowPane.margin>
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+               </FlowPane.margin>
+            </ColorPicker>
+         </children>
+      </FlowPane>
+      <FlowPane alignment="CENTER" prefHeight="45.0" prefWidth="600.0">
+         <children>
+            <Label text="Толщина " />
+            <Slider fx:id="sliderSetSize">
+               <FlowPane.margin>
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+               </FlowPane.margin>
+            </Slider>
+         </children>
+      </FlowPane>
    </children>
-</GridPane>
+</VBox>

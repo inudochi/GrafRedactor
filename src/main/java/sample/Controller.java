@@ -13,16 +13,19 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.paint.Color;
 import javafx.scene.transform.Transform;
 import javafx.stage.FileChooser;
-import javafx.scene.paint.Color;
+
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
 
 public class Controller {
-    public ColorPicker cp;
-    public Slider sl;
+    public ColorPicker colorPickerStroke;
+    public ColorPicker colorPickerFill;
+    public Slider sliderSetSize;
+    public CheckBox fillCheckBox;
     @FXML
     private ToggleButton lineToggle;
     @FXML
@@ -33,35 +36,134 @@ public class Controller {
     //Добавим переменные для хранения начальной и конечной точек линии:
     private boolean isDrawingLine = false;
     private double startX, startY;
-
+    private double endX;
+    private double endY;
+    private Image snapshot;
     Image bgImage;
     double bgX, bgY, bgW = 300.0, bgH = 300.0;
     public void initialize(){
         GraphicsContext gc = canvas.getGraphicsContext2D();
         model = new Model();
-        SliderTol();
-        //Инициализируем lineToggle
         lineToggle.setSelected(false);
-    }
-    public void SliderTol() {//толщина линии
-        sl.setMin(3);
-        sl.setMax(10);
-        sl.setValue(3);
-
-        flag =NewLine.getId();
+        initSliderWidth();
+        initFillCheckBox();
+        colorPickerStroke.setValue(Color.BLACK);
     }
 
-    public void clik_canvas(MouseEvent mouseEvent) {
+    public void initSliderWidth() {
+        sliderSetSize.setMin(0);
+        sliderSetSize.setMax(20);
+        sliderSetSize.setValue(1);
+        sliderSetSize.setShowTickMarks(true);
+        sliderSetSize.setShowTickLabels(true);
+        sliderSetSize.setBlockIncrement(2.0);
+        sliderSetSize.setMajorTickUnit(5.0);
+        sliderSetSize.setMinorTickCount(4);
+    }
 
+    public void initFillCheckBox(){
+        fillCheckBox.setSelected(false);
+        fillCheckBox.setText("Заливка");
+    }
+
+    private void releaseEmpty(MouseEvent event) {
+        //Ничего не делает лол, нужен для того, чтобы после переключения с фигуры больше ничего не происходило
+        //В противном случае даже если ткнуть карандаш эта штука будет или ошибку выкидывать или параллельно с карандашом клепать многоугольники
+    }
+    //Карандаш
+    public void setDrawPencil(){
+        canvas.setOnMousePressed(this::startPencil);
+        canvas.setOnMouseDragged(this::dragPencil);
+        canvas.setOnMouseReleased(this::releaseEmpty);
+    }
+    public void startPencil(MouseEvent event){
         GraphicsContext gc = canvas.getGraphicsContext2D();
-        model = new Model();
-        model.addPoint(new Points((int) mouseEvent.getX(), (int) mouseEvent.getY()));
-        for (int i = 0; i < model.getPointCount(); i++) {
+        startX = event.getX();
+        startY = event.getY();
+        gc.setFill(colorPickerStroke.getValue());
+        gc.fillOval(startX,startY, sliderSetSize.getValue(), sliderSetSize.getValue());
+    }
+    public void dragPencil(MouseEvent event){
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        startX = event.getX();
+        startY = event.getY();
+        gc.setFill(colorPickerStroke.getValue());
+        gc.fillOval(startX,startY, sliderSetSize.getValue(), sliderSetSize.getValue());
+    }
+    //Ластик
+    public void setEraser(){
+        canvas.setOnMousePressed(this::startEraser);
+        canvas.setOnMouseDragged(this::dragEraser);
+        canvas.setOnMouseReleased(this::releaseEmpty);
+    }
+    public void startEraser(MouseEvent event){
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        startX = event.getX();
+        startY = event.getY();
+        gc.clearRect(startX,startY, sliderSetSize.getValue(), sliderSetSize.getValue());
+    }
+    public void dragEraser(MouseEvent event){
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        startX = event.getX();
+        startY = event.getY();
+        gc.clearRect(startX,startY, sliderSetSize.getValue(), sliderSetSize.getValue());
+    }
+    //Пятиугольник
+    public void setPentagon(){
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        canvas.setOnMousePressed(this::startPentagon);
+        canvas.setOnMouseDragged(event -> dragPentagon(event,gc));
+        canvas.setOnMouseReleased(event -> releasePentagon(event,gc));
+    }
+    private void startPentagon(MouseEvent event) {
+        startX = event.getX();
+        startY = event.getY();
+        snapshot = canvas.snapshot(null,null);
+    }
 
-            gc.fillOval(model.getPoint(i).getX(), model.getPoint(i).getY(), model.getPoint(i).getwP(), model.getPoint(i).gethP());
+    private void dragPentagon(MouseEvent event, GraphicsContext gc) {
+        endX = event.getX();
+        endY = event.getY();
+        gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
+        gc.drawImage(snapshot,0,0);
+        drawPentagon(gc, startX, startY, endX, endY);
+    }
+
+    private void releasePentagon(MouseEvent event, GraphicsContext gc) {
+        endX = event.getX();
+        endY = event.getY();
+        gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
+        gc.drawImage(snapshot,0,0);
+        drawPentagon(gc, startX, startY, endX, endY);
+    }
+    private void drawPentagon(GraphicsContext gc, double startX, double startY, double endX, double endY) {
+        double centerX = (startX + endX) / 2;
+        double centerY = (startY + endY) / 2;
+
+        double radiusX = Math.abs(endX - startX) / 2;
+        double radiusY = Math.abs(endY - startY) / 2;
+
+        double[] xPoints = new double[5];
+        double[] yPoints = new double[5];
+
+        for (int i = 0; i < 5; i++) {
+            double angle = Math.toRadians(90 + i * 72);
+            xPoints[i] = centerX + radiusX * Math.cos(angle);
+            yPoints[i] = centerY - radiusY * Math.sin(angle);
         }
 
+        gc.setStroke(colorPickerStroke.getValue());
+        gc.setLineWidth(sliderSetSize.getValue());
+        gc.setFill(colorPickerFill.getValue());
+        boolean fill = fillCheckBox.isSelected();
+        if (fill) {
+            gc.fillPolygon(xPoints, yPoints, 5);
+        }
+        gc.strokePolygon(xPoints, yPoints, 5);
     }
+
+
+
 
     public void open(ActionEvent actionEvent) {
         GraphicsContext gc = canvas.getGraphicsContext2D();
@@ -81,25 +183,12 @@ public class Controller {
     }
 
 
+
+
+
+
+
     private void initDraw(GraphicsContext gc, File file) {
-
-        double canvasWidth = gc.getCanvas().getWidth();
-        double canvasHeight = gc.getCanvas().getHeight();
-
-
-        bgImage = new Image(file.toURI().toString());
-        bgX = canvasWidth/4 ;
-        bgY = canvasHeight/7 ;
-        gc.drawImage(bgImage, bgX, bgY, bgW, bgH);
-
-    }
-
-    public  String flag;
-    public Button NewLine;
-
-    public void update(Model model) {
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-
 
         for (int i = 0; i < model.getPointCount(); i++) {
             //gc.setFill(cp.getValue());
@@ -136,17 +225,21 @@ public class Controller {
             model.addPoint(points);
             update(model);
         }
+  // ====
+        double canvasWidth = gc.getCanvas().getWidth();
+        double canvasHeight = gc.getCanvas().getHeight();
+
+
+        bgImage = new Image(file.toURI().toString());
+        gc.drawImage(bgImage,0,0);
     }
 
 
     public void save(ActionEvent actionEvent) throws IOException {
 
-        WritableImage wim=new WritableImage(700,700);
+        WritableImage wim=new WritableImage((int)canvas.getWidth(),(int)canvas.getHeight());
         SnapshotParameters spa= new SnapshotParameters();
-        spa.setTransform(Transform.scale(2,2));
-        canvas.snapshot(spa,wim);
-        //c2.snapshot(spa,wim);
-        //c3.snapshot(spa,wim);
+        canvas.snapshot(null,wim);
         File file=new File("Результат.png");
 
         try {
@@ -156,44 +249,7 @@ public class Controller {
         }
 
     }
-
-
-    public void lastik(ActionEvent actionEvent) {
-        GraphicsContext gr = canvas.getGraphicsContext2D();
-        model = new Model();
-        gr.setFill(Color.WHITESMOKE);
-
-        for (int i = 0; i < model.getPointCount(); i++) {
-
-            gr.clearRect(model.getPoint(i).getX(), model.getPoint(i).getY(), model.getPoint(i).getwP(), model.getPoint(i).gethP());
-        }
-
-
-    }
-
-    public void kar(ActionEvent actionEvent) {
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-        model = new Model();
-        gc.setFill(Color.BLACK);
-
-        for (int i = 0; i < model.getPointCount(); i++) {
-
-            gc.clearRect(model.getPoint(i).getX(), model.getPoint(i).getY(), model.getPoint(i).getwP(), model.getPoint(i).gethP());
-        }
-
-
-    }
-
-    public void act(ActionEvent actionEvent) {
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-        gc.setFill(cp.getValue());
-
-    }
-
-    public void click2(MouseEvent mouseEvent) {
-
-    }
-    //Добавим метод для переключения рисоавании линии:
+  
     @FXML
     public void toggleLine(ActionEvent event) {
         isDrawingLine = lineToggle.isSelected();
