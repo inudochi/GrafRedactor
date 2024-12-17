@@ -204,9 +204,11 @@ public class Controller {
             // Сохраняем начальные координаты
             startX = mouseEvent.getX();
             startY = mouseEvent.getY();
+            snapshot = canvas.snapshot(null, null);
         } else if (mouseEvent.getEventType() == MouseEvent.MOUSE_DRAGGED) {
             // Очистить холст и перерисовать все точки
             gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+            gc.drawImage(snapshot, 0, 0);
             update(model); // Перерисовать точки
             // Цвет и толщина линии
             gc.setStroke(colorPickerStroke.getValue());
@@ -219,8 +221,6 @@ public class Controller {
             gc.setLineWidth(sliderSetSize.getValue());
             gc.strokeLine(startX, startY, mouseEvent.getX(), mouseEvent.getY());
         }
-        // Логика для рисования точек
-        // ====
         double canvasWidth = gc.getCanvas().getWidth();
         double canvasHeight = gc.getCanvas().getHeight();
 
